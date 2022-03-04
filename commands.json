@@ -1,3 +1,4 @@
 {
-	"q": "print(term.blue(term.bold('Thank you for using ILMS!'))); quit()"
+	"q": "print(term.blue(term.bold('Thank you for using ILMS!'))); quit()",
+	"echo": "print(args[0])"
 }

@@ -1,6 +1,6 @@
 from blessed import Terminal
+import logging
 import json
-import ilmsl
 
 term = Terminal()
 running = True
@@ -9,18 +9,34 @@ command = []
 commands = None
 with open("commands.json", "r") as f:
 	commands = json.load(f)
+message_type = "message"
 message = ""
 
-def runCommand(command, *args):
+def runScript(path):
+	global message_type
 	global message
+	try:
+		
+		message_type = "message"
+		message = "script ran successfully"
+	except Exception as e:
+		message_type = "error"
+		message = "script error: " + str(e)
+
+def runCommand(command, *args_raw):
+	global message_type
+	global message
+	args = list(args_raw)
 	if command == "help":
 		message = f"help: {commands[args]}"
 	elif command in commands:
 		try:
 			exec(commands[command])
+			message_type = "message"
 		except Exception as e:
 			message = "command error: " + str(e)
 	else:
+		message_type = "error"
 		message = "command not found"
 
 # Check the input
@@ -30,11 +46,11 @@ def check_inp(inp):
 	if inp == "KEY_BACKSPACE":
 		if len(command) > 0: command.pop()
 	elif inp == "KEY_ENTER":
-		runCommand(remove_quotes_from_list(command))
+		x = remove_quotes_from_list(command).split(" ")
+		runCommand(x[0], x[1:])
 		command = []
 	else:
 		command.append(inp)
-
 		term.clear()
 
 def remove_quotes_from_list(list):
@@ -55,7 +71,7 @@ print(term.move_down(2) + term.bold(term.red('~ ')) + term.grey("type \"help\" f
 
 files = {
 	"rom": {
-		"startup.lua": "-- ILMSOS- I Love Making Stuff OS\n--print('')"
+		"startup.ilmsl": "-- ILMSOS- I Love Making Stuff OS\n--print('')"
 	}
 }
 
@@ -68,5 +84,11 @@ while running:
 	print(term.move_down(1) + term.black_on_darkkhaki(term.center('version 1.0.0.0')))
 
 	check_inp(repr(inp))
+	
 	print(term.move_down(2) + term.bold(term.red('~ ')) + term.bold(remove_quotes_from_list(command)))
-	if message != None: print(term.bold(term.red(f'! {message}')))
+		
+	if message != None:
+		if message_type == "error":
+			print(term.bold(term.red(f'! {message}')))
+		if message_type == "message":
+			print(term.bold(term.white(f'{message}')))
